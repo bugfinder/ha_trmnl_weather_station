@@ -56,7 +56,7 @@ def get_entity_selectors() -> tuple[dict, dict, dict]:
     """Create entity selectors for CO2, general sensors, and weather."""
     co2_filter = {
         "domain": ["sensor"],
-        "device_class": ["carbon_dioxide"],
+        "device_class": ["temperature"],
     }
 
     sensor_filter = {
