@@ -112,7 +112,7 @@ class SensorProcessor:
                 _LOGGER.warning(
                     "Weather provider %s not found", current_weather_provider
                 )
-
+        forecast_data = self.hass.services.call(current_weather_provider, "get_forecasts", {"type" : daily})
         additional_sensors = [
             (current_sensor_1, current_sensor_1_name, "sensor_1"),
             (current_sensor_2, current_sensor_2_name, "sensor_2"),
