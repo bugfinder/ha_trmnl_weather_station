@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pprint
 import asyncio
 import logging
 from datetime import datetime
@@ -112,7 +113,7 @@ class SensorProcessor:
                 _LOGGER.warning(
                     "Weather provider %s not found", current_weather_provider
                 )
-        forecast_data = self.hass.services.call(current_weather_provider, "get_forecasts", {"type" : daily})
+
         additional_sensors = [
             (current_sensor_1, current_sensor_1_name, "sensor_1"),
             (current_sensor_2, current_sensor_2_name, "sensor_2"),
@@ -148,6 +149,27 @@ class SensorProcessor:
         if not entities_payload:
             _LOGGER.error("No valid sensor data to send")
             return
+        _LOGGER.info("calling weather service")
+        pprint.pp(weather_state)
+        _LOGGER.info("calling weather service")
+#        tcount = 1
+#        for forecast in forecast_data:
+#            _LOGGER.info("got %s %s %s %s", tcount, forecast["datetime"], forecast["temperature"], forecast["templow"])
+#            tcount = tcount + 1
+#            for ffield in ("datetime","temperature","templow","condition"):
+#                value = forecast[ffield]
+#                if value:
+#                    sensor_payload = create_entity_payload(
+#                        value,
+#                        sensor_type=ffield,
+#                        custom_name=("%s_%s",ffield,tcount),
+#                    )
+#                if sensor_payload:
+#                    entities_payload.append(sensor_payload)
+#                    _LOGGER.debug("added %s %s %s", ffield, value, tcount)
+#                else:
+#                    _LOGGER.error("adding values %s %s %s failed", ffield, value, tcount)
+#            tcount = tcount + 1
 
         timestamp = datetime.now().isoformat()
 
