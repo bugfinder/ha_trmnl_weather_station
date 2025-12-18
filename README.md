@@ -8,5 +8,5 @@ This started as one of the kindle based weather displays, where I set several va
 in a svg that was then scaled and displayed on an old scratchy kindle.
 With TRMNL available I finally started work on replacing that.
 
--![ha_trmnl](https://github.com/TilmanGriesel/ha_trmnl_weather_station/blob/main/docs/ha_trmnl.png?raw=true)
+-![ha_trmnl](https://github.com/bugfinder/ha_trmnl_weather_station/blob/main/docs/ha_trmnl.png?raw=true)
 
