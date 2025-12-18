@@ -1,0 +1,221 @@
+template:
+  - trigger:
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        minutes: "/30" # every 30 minutes
+      - platform: event
+        event_type: event_template_reloaded
+    action:
+      - service: weather.get_forecasts
+        target:
+          entity_id: weather.zuhause
+        data:
+          type: daily
+        response_variable: fc_daily
+    sensor:
+      - name: Weather Forecast Daily 0
+        unique_id: sensor.weather_forecast_daily_0
+        state: "{{ fc_daily['weather.zuhause'].forecast[0].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[0].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[0].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[0].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[0].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[0].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 1
+        unique_id: sensor.weather_forecast_daily_1
+        state: "{{ fc_daily['weather.zuhause'].forecast[1].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[1].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[1].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[1].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[1].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[1].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 2
+        unique_id: sensor.weather_forecast_daily_2
+        state: "{{ fc_daily['weather.zuhause'].forecast[2].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[2].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[2].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[2].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[2].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[2].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 3
+        unique_id: sensor.weather_forecast_daily_3
+        state: "{{ fc_daily['weather.zuhause'].forecast[3].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[3].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[3].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[3].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[3].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[3].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 4
+        unique_id: sensor.weather_forecast_daily_4
+        state: "{{ fc_daily['weather.zuhause'].forecast[4].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[4].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[4].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[4].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[4].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[4].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 5
+        unique_id: sensor.weather_forecast_daily_5
+        state: "{{ fc_daily['weather.zuhause'].forecast[5].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[5].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[5].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[5].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[5].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[5].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 6
+        unique_id: sensor.weather_forecast_daily_6
+        state: "{{ fc_daily['weather.zuhause'].forecast[6].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[6].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[6].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[6].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[6].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[6].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: Weather Forecast Daily 7
+        unique_id: sensor.weather_forecast_daily_7
+        state: "{{ fc_daily['weather.zuhause'].forecast[7].condition }}"
+        attributes:
+          state: "{{ fc_daily['weather.zuhause'].forecast[7].condition }}"
+          temperature: "{{ fc_daily['weather.zuhause'].forecast[7].temperature }}"
+          templow: "{{ fc_daily['weather.zuhause'].forecast[7].templow }}"
+          humidity: "{{ fc_daily['weather.zuhause'].forecast[7].humidity }}"
+          datetime: "{{ as_timestamp(strptime(fc_daily['weather.zuhause'].forecast[7].datetime, '%Y-%m-%dT%H:%M:%S+00:00')) | timestamp_custom('%d.%m.') }}"
+          unit_of_measurement: "°C"
+      - name: MinHighWeekly
+        unique_id: sensor.mintemp
+        state: >
+          {{ fc_daily['weather.zuhause'].forecast[:7] | map(attribute='temperature') | list | min }}
+        attributes:
+          device_class: "td"
+      - name: MaxHighWeekly
+        unique_id: sensor.maxtemp
+        state: >
+          {{ fc_daily['weather.zuhause'].forecast[:7] | map(attribute='temperature') | list | max }}
+        attributes:
+          device_class: "tu"
+  - sensor:
+    - name: 'Next Sunrise'
+      unique_id: sensor.nextsunrise
+      icon: mdi:weather-sunset-up
+      state: >
+        {{ as_timestamp(states.sun.sun.attributes.next_rising) | timestamp_custom(' %I:%M %p') | replace(" 0", "") }}
+      attributes:
+        device_class: "weather-sunset-up"
+    - name: 'Next Sunset'
+      unique_id: sensor.nextsunset
+      icon: mdi:weather-sunset-down
+      state: >
+        {{ as_timestamp(states.sun.sun.attributes.next_setting) | timestamp_custom(' %I:%M %p') | replace(" 0", "") }}
+      attributes:
+        device_class: "weather-sunset-down"
+    - name: 'Current Temperature'
+      unique_id: sensor.current_temperature
+      icon: mdi:thermometer
+      state: >
+        {{ state_attr('weather.zuhause', 'temperature') }}
+      attributes:
+        device_class: "thermometer"
+    - name: 'Current Temperature Unit'
+      icon: mdi:temperature-celsius
+      unique_id: sensor.current_temperature_unit
+      state: >
+        {{ state_attr('weather.zuhause', 'temperature_unit') }}
+      attributes:
+        device_class: "thermometer-celsius"
+    - name: "Current Weather"
+      unique_id: sensor.current_weather
+      icon: mdi:cloud-outline
+      state: >
+        {%if is_state('sensor.zuhause_condition','clear-night') %}
+          Klare Nacht
+        {%elif is_state('sensor.zuhause_condition','cloudy') %}
+          Bewölkt
+        {%elif is_state('sensor.zuhause_condition','exceptional') %}
+          Aussergewöhnlich
+        {%elif is_state('sensor.zuhause_condition','fog') %}
+          Nebel
+        {%elif is_state('sensor.zuhause_condition','hail') %}
+          Hagel
+        {%elif is_state('sensor.zuhause_condition','lightning') %}
+          Gewitter
+        {%elif is_state('sensor.zuhause_condition','lightning-rainy') %}
+          Gewitter Regen
+        {%elif is_state('sensor.zuhause_condition','partlycloudy') %}
+          Teilweise Bewölkt
+        {%elif is_state('sensor.zuhause_condition','pouring') %}
+          Starker Regen
+        {%elif is_state('sensor.zuhause_condition','rainy') %}
+          Regen
+        {%elif is_state('sensor.zuhause_condition','snowy') %}
+          Schnee
+        {%elif is_state('sensor.zuhause_condition','snowy-rainy') %}
+          Schneeregen
+        {%elif is_state('sensor.zuhause_condition','sunny') %}
+          Sonnig
+        {%elif is_state('sensor.zuhause_condition','windy') %}
+          Windig
+        {%elif is_state('sensor.zuhause_condition','windy-variant') %}
+          Böig
+        {%else %}
+          Unbekannt
+        {%endif %}
+    - name: "Forecast"
+      unique_id: sensor.forecast_weather
+      icon: mdi:cloud-outline
+      state: >
+        {%if is_state('sensor.weather_forecast_daily_0','clear-night') %}
+          Klare Nacht
+        {%elif is_state('sensor.weather_forecast_daily_0','cloudy') %}
+          Bewölkt
+        {%elif is_state('sensor.weather_forecast_daily_0','exceptional') %}
+          Aussergewöhnlich
+        {%elif is_state('sensor.weather_forecast_daily_0','fog') %}
+          Nebel
+        {%elif is_state('sensor.weather_forecast_daily_0','hail') %}
+          Hagel
+        {%elif is_state('sensor.weather_forecast_daily_0','lightning') %}
+          Gewitter
+        {%elif is_state('sensor.weather_forecast_daily_0','lightning-rainy') %}
+          Gewitter Regen
+        {%elif is_state('sensor.weather_forecast_daily_0','partlycloudy') %}
+          Teilweise Bewölkt
+        {%elif is_state('sensor.weather_forecast_daily_0','pouring') %}
+          Starker Regen
+        {%elif is_state('sensor.weather_forecast_daily_0','rainy') %}
+          Regen
+        {%elif is_state('sensor.weather_forecast_daily_0','snowy') %}
+          Schnee
+        {%elif is_state('sensor.weather_forecast_daily_0','snowy-rainy') %}
+          Schneeregen
+        {%elif is_state('sensor.weather_forecast_daily_0','sunny') %}
+          Sonnig
+        {%elif is_state('sensor.weather_forecast_daily_0','windy') %}
+          Windig
+        {%elif is_state('sensor.weather_forecast_daily_0','windy-variant') %}
+          Böig
+        {%else %}
+          Unbekannt
+        {%endif %}
+    - name: "Windrichtung"
+      unique_id: sensor.winddir
+      icon: mdi:weather-windy-variant
+      state: >
+          {% set direction = ['N','NNO','NO','ONO','O','OSO','SO','SSO','S','SSW','SW','WSW','W','WNW','NW','NNW','N'] %}
+          {% set degree = states('sensor.zuhause_wind_bearing')|float %}
+          {{ direction[((degree+11.25)/22.5)|int] }}
+      attributes:
+        device_class: "weather-windy-variant"
+
