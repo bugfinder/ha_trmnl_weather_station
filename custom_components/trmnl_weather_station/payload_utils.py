@@ -47,15 +47,20 @@ def create_entity_payload(
     rounded_value = round_sensor_value(state.state, decimal_places)
 
     payload = {
-        "val": rounded_value,
-        "type": sensor_type,
+        "v": rounded_value,
+        "t": sensor_type,
     }
 
     if include_id:
         payload["id"] = entity_name
 
     if "unit_of_measurement" in state.attributes:
-        payload["u"] = state.attributes.get("unit_of_measurement")
+        units_parts = state.attributes.get("unit_of_measurement","").split(":")
+        if len(units_parts) > 1:
+            payload["u"] = units_parts[1]
+        if len(units_parts) > 0:
+            payload["u"] = units_parts[0]
+
 
     if custom_name and custom_name.strip():
         payload["n"] = custom_name.strip()
@@ -67,11 +72,11 @@ def create_entity_payload(
     else:
         payload["n"] = entity_name.replace("_", " ").title()
 
-    if "icon" in state.attributes:
-        icon = state.attributes.get("icon")
-        if icon:
-            payload["i"] = icon
-            _LOGGER.debug("Added icon '%s' for entity %s", icon, state.entity_id)
+#    if "icon" in state.attributes:
+#        icon = state.attributes.get("icon")
+#        if icon:
+#            payload["i"] = icon
+#            _LOGGER.debug("Added icon '%s' for entity %s", icon, state.entity_id)
 
     if "battery_percent" in state.attributes:
         battery = state.attributes.get("battery_percent")
@@ -79,7 +84,31 @@ def create_entity_payload(
             payload["bat"] = round_sensor_value(battery, decimal_places)
 
     if "device_class" in state.attributes:
-        payload["device_class"] = state.attributes.get("device_class")
+        payload["dc"] = state.attributes.get("device_class")
+        if payload["dc"] == "humidity":
+            payload["dc"] = "water-percent"
+
+        if payload["dc"] == "wind_speed":
+            payload["dc"] = "weather-windy"
+
+        if payload["dc"] == "precipitation_intensity":
+            payload["dc"] = "weather-rainy"
+
+        if payload["dc"] == "thermometer":
+            payload["dc"] = "tm"
+
+        if payload["dc"] == "temperature":
+            payload["dc"] = "tm"
+
+    if "temperature" in state.attributes:
+        payload["th"] = str(state.attributes.get("temperature"))
+
+    if "templow" in state.attributes:
+        payload["tl"] = str(state.attributes.get("templow"))
+#        payload["th"] = payload["th"] + ":" + state.attributes.get("templow")
+
+    if "humidity" in state.attributes:
+        payload["hum"] = state.attributes.get("humidity")
 
     _LOGGER.debug(
         "Created payload for %s (%s): %s", state.entity_id, sensor_type, payload
