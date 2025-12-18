@@ -53,8 +53,6 @@ class SensorProcessor:
 
         current_config = {**self.entry.data, **self.entry.options}
         current_url = current_config.get(CONF_URL)
-        current_co2_sensor = current_config.get(CONF_CO2_SENSOR)
-        current_co2_name = current_config.get(CONF_CO2_NAME)
         current_weather_provider = current_config.get(CONF_WEATHER_PROVIDER)
         current_sensor_1 = current_config.get(CONF_SENSOR_1)
         current_sensor_1_name = current_config.get(CONF_SENSOR_1_NAME)
@@ -75,30 +73,6 @@ class SensorProcessor:
 
         entities_payload = []
 
-        co2_state = (
-            self.hass.states.get(current_co2_sensor) if current_co2_sensor else None
-        )
-        if co2_state:
-            co2_payload = create_entity_payload(
-                co2_state,
-                sensor_type="co2_primary",
-                custom_name=current_co2_name,
-                include_id=include_ids,
-                decimal_places=decimal_places,
-            )
-            if co2_payload:
-                co2_payload["primary"] = True
-                entities_payload.append(co2_payload)
-                _LOGGER.debug(
-                    "Added CO2 sensor (primary): %s with name '%s' and value %s",
-                    current_co2_sensor,
-                    co2_payload.get("n"),
-                    co2_payload.get("val"),
-                )
-        else:
-            _LOGGER.warning("CO2 sensor %s not found", current_co2_sensor)
-            return
-
         weather_code = None
         if current_weather_provider:
             weather_state = self.hass.states.get(current_weather_provider)
@@ -114,6 +88,25 @@ class SensorProcessor:
                     "Weather provider %s not found", current_weather_provider
                 )
 
+        weather_lang = None
+        weather_lang_state = self.hass.states.get("sensor.current_weather")
+        if weather_lang_state:
+            weather_lang_code = weather_lang_state.state
+            _LOGGER.debug(
+                "Weather provider %s has condition: %s",
+                "sensor.current_weather",
+                weather_lang_code,
+            )
+        else:
+            _LOGGER.warning(
+                "Weather provider %s not found", "sensor.current_weather"
+            )
+
+        moon_code = None
+        moon_state = self.hass.states.get("sensor.moon")
+        if moon_state:
+            moon_code = moon_state.state
+
         additional_sensors = [
             (current_sensor_1, current_sensor_1_name, "sensor_1"),
             (current_sensor_2, current_sensor_2_name, "sensor_2"),
@@ -126,10 +119,15 @@ class SensorProcessor:
         for sensor_id, custom_name, sensor_label in additional_sensors:
             if sensor_id and isinstance(sensor_id, str) and sensor_id.strip():
                 sensor_state = self.hass.states.get(sensor_id.strip())
+                _LOGGER.info("sensor state is %s", pprint.pformat(sensor_state))
+                if sensor_state:
+                    _LOGGER.info("sensor state id is %s", pprint.pformat(sensor_state.entity_id))
+                _LOGGER.info("sensor label is %s", pprint.pformat(sensor_label))
+                _LOGGER.info("sensor custom name is %s", pprint.pformat(custom_name))
                 if sensor_state:
                     sensor_payload = create_entity_payload(
                         sensor_state,
-                        sensor_type=sensor_label,
+                        sensor_type="r",
                         custom_name=custom_name,
                         include_id=include_ids,
                         decimal_places=decimal_places,
@@ -149,46 +147,83 @@ class SensorProcessor:
         if not entities_payload:
             _LOGGER.error("No valid sensor data to send")
             return
-        _LOGGER.info("calling weather service")
-        pprint.pp(weather_state)
-        _LOGGER.info("calling weather service")
-#        tcount = 1
-#        for forecast in forecast_data:
-#            _LOGGER.info("got %s %s %s %s", tcount, forecast["datetime"], forecast["temperature"], forecast["templow"])
-#            tcount = tcount + 1
-#            for ffield in ("datetime","temperature","templow","condition"):
-#                value = forecast[ffield]
-#                if value:
-#                    sensor_payload = create_entity_payload(
-#                        value,
-#                        sensor_type=ffield,
-#                        custom_name=("%s_%s",ffield,tcount),
-#                    )
-#                if sensor_payload:
-#                    entities_payload.append(sensor_payload)
-#                    _LOGGER.debug("added %s %s %s", ffield, value, tcount)
-#                else:
-#                    _LOGGER.error("adding values %s %s %s failed", ffield, value, tcount)
-#            tcount = tcount + 1
+
+#        _LOGGER.info("calling weather service")
+#        service_data:dict = {
+#                "entity_id": current_weather_provider,
+#                'type': 'daily',
+#                }
+#        forecast_data:dict = await self.hass.services.async_call(domain='weather', service='get_forecasts', service_data=service_data, blocking=True, return_response=True)
+#        _LOGGER.info("%s", pprint.pformat(forecast_data))
+#        _LOGGER.info("calling weather service")
+#        forecast_data_int = forecast_data[current_weather_provider]['forecast']
+        for forecast_num in range(0,8):
+            my_state = self.hass.states.get("sensor.weather_forecast_daily_"+str(forecast_num))
+            my_date = my_state.attributes.get("datetime", "01.01.")
+            _LOGGER.info("forecast sensor state is %s", pprint.pformat(my_state))
+            _LOGGER.info("forecast sensor id is %s", pprint.pformat(my_state.entity_id))
+            sensor_payload = create_entity_payload(
+                    my_state,
+                    sensor_type="f",
+                    custom_name=my_date
+            )
+            if sensor_payload:
+                entities_payload.append(sensor_payload)
+                _LOGGER.info("added %s %s", my_state, forecast_num)
+            else:
+                _LOGGER.error("adding values %s failed", forecast_num)
+
+        weather_sensors = [
+            ("sensor.windrichtung", "Wind-Dir", "w"),
+            ("sensor.zuhause_wind_speed", "Wind-Spd", "w"),
+            ("sensor.zuhause_rain", "Regen", "w"),
+            ("sensor.zuhause_humidity", "Luftf.", "w"),
+            ("sensor.next_sunrise", "Sunrise", "x"),
+            ("sensor.next_sunset", "Sunset", "x"),
+            ("sensor.zuhause_pressure", "Luft", "x"),
+            ("sensor.ruediger_s_trmnl_battery_percentage", "Batt", "x"),
+            ("sensor.zuhause_temperature", "Temp", "y"),
+            ("sensor.minhighweekly", "Min", "y"),
+            ("sensor.maxhighweekly", "Max", "y"),
+        ]
+
+        for sensor_id, custom_name, sensor_label in weather_sensors:
+            if sensor_id and isinstance(sensor_id, str) and sensor_id.strip():
+                sensor_state = self.hass.states.get(sensor_id.strip())
+                _LOGGER.info("sensor state is %s", pprint.pformat(sensor_state))
+                _LOGGER.info("sensor label is %s", pprint.pformat(sensor_label))
+                _LOGGER.info("sensor custom name is %s", pprint.pformat(custom_name))
+                if sensor_state:
+                    _LOGGER.info("sensor state id is %s", pprint.pformat(sensor_state.entity_id))
+                    sensor_payload = create_entity_payload(
+                        sensor_state,
+                        sensor_type=sensor_label,
+                        custom_name=custom_name,
+                        include_id=include_ids,
+                        decimal_places=decimal_places,
+                    )
+                    if sensor_payload:
+                        entities_payload.append(sensor_payload)
+                        _LOGGER.debug(
+                            "Added %s: %s with name '%s' and value %s",
+                            sensor_label,
+                            sensor_id,
+                            sensor_payload.get("n"),
+                            sensor_payload.get("val"),
+                        )
+                else:
+                    _LOGGER.warning("Sensor %s (%s) not found", sensor_label, sensor_id)
 
         timestamp = datetime.now().isoformat()
-
-        rounded_co2_value = (
-            round_sensor_value(co2_state.state, decimal_places) if co2_state else None
-        )
 
         payload = {
             "merge_variables": {
                 "entities": entities_payload,
                 "timestamp": timestamp,
                 "count": len(entities_payload),
-                "co2_value": rounded_co2_value,
-                "co2_unit": (
-                    co2_state.attributes.get("unit_of_measurement", "ppm")
-                    if co2_state
-                    else "ppm"
-                ),
-                "weather_code": weather_code,
+                "wc": weather_code,
+                "wl": weather_lang_code,
+                "ms": moon_code,
             }
         }
 
@@ -196,6 +231,8 @@ class SensorProcessor:
         _LOGGER.debug(
             "Payload size: %d bytes (%d entities)", final_size, len(entities_payload)
         )
+
+        _LOGGER.info("payload data is %s", pprint.pformat(payload))
 
         if final_size > MAX_PAYLOAD_SIZE:
             _LOGGER.warning(
@@ -212,13 +249,8 @@ class SensorProcessor:
                         "entities": final_payloads + [sensor_payload],
                         "timestamp": timestamp,
                         "count": len(final_payloads) + 1,
-                        "co2_value": rounded_co2_value,
-                        "co2_unit": (
-                            co2_state.attributes.get("unit_of_measurement", "ppm")
-                            if co2_state
-                            else "ppm"
-                        ),
-                        "weather_code": weather_code,
+                        "wc": weather_code,
+                        "wl": weather_lang_code,
                     }
                 }
                 if estimate_payload_size(test_payload) <= MAX_PAYLOAD_SIZE:
@@ -229,11 +261,12 @@ class SensorProcessor:
             payload["merge_variables"]["entities"] = final_payloads
             payload["merge_variables"]["count"] = len(final_payloads)
             final_size = estimate_payload_size(payload)
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Trimmed payload size: %d bytes (%d entities)",
                 final_size,
                 len(final_payloads),
             )
+            _LOGGER.info("final payload data is %s", pprint.pformat(final_payloads))
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -241,9 +274,8 @@ class SensorProcessor:
                 async with session.post(current_url, json=payload) as response:
                     if response.status == 200:
                         _LOGGER.info(
-                            "Successfully sent %d sensors to TRMNL (CO2: %s)",
-                            len(entities_payload),
-                            rounded_co2_value,
+                            "Successfully sent %d sensors to TRMNL",
+                            len(entities_payload)
                         )
                         _LOGGER.debug("Response: %s", await response.text())
                     else:
