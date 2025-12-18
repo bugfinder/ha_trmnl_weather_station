@@ -1,187 +1,238 @@
-<!--
-Home Assistant TRMNL Weather Station v0.6.0
-
-- GitHub: https://github.com/TilmanGriesel/ha_trmnl_weather_station
-- License: MIT License
-
-Changelog:
-- v0.6.0: Fixed TRMNL framework layout structure for proper label/value alignment
-- v0.5.1: Weather integration improvements, dev tools enhancement, HACS release preparation
-- v0.5.0: Added weather provider entity integration with weather icons in CO2 gauge section
-- v0.4.0: Expanded sensor support (up to 6 sensors), configurable update rates, new sensor types, entity icon attributes
-- v0.3.2: Updated TRMNL recipe setup instructions, refactored code into logic modules
-- v0.3.1: Fixed label positioning above sensor values, enhanced font-weight for values, updated shared template with icon mapping
-- v0.3.0: Initial release - First official version with basic weather station and CO₂ indicator functionality
--->
-
 <style>
-  .trmnl .view--half_vertical::before {
-    background: none;
-  }
-  .sensor-value {
-    font-weight: 600 !important;
-  }
-  .gauge-container {
-    position: relative;
-    display: inline-block;
-  }
   .weather-icon {
-    position: absolute;
-    top: 68%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 50px;
+    transform: scale(600%, 600%);
+  }
+  .weather-daily-icon {
+    transform: scale(100%, 100%);
+  }
+  .left {
+    float:left
+  }
+  .right {
+    float:right
   }
 </style>
-<div class="mashup mashup--1Lx1R">
-  <div class="layout">
-    <div class="gauge-container">
-      <div id="co2-gauge"></div>
-      {% assign weather_icon = '' %}
-      {% for icon_pair in weather_icon_map %}
-      {% assign icon_data = icon_pair | split: ':' %}
-      {% if icon_data[0] == weather_code %}
-      {% assign weather_icon = icon_data[1] %}
-      {% break %}
-      {% endif %}
-      {% endfor %}
-      <span class="weather-icon mdi {{ weather_icon }}"></span>
-    </div>
-  </div>
-  <div class="layout">
-    <div class="grid grid--cols-2">
+
+{% assign time_format = timestamp | split: '.' %}
+{% assign time_format2 = time_format[0] | split: 'T' %}
+
+{% assign weather_icon = '' %}
+{% for icon_pair in weather_icon_map %}
+{% assign icon_data = icon_pair | split: ':' %}
+{% if icon_data[0] == wc %}
+{% assign weather_icon = icon_data[1] %}
+{% break %}
+{% endif %}
+{% endfor %}
+<div class="layout layout--col gap--space-between"> 
+  <div class="grid grid---cols-7">    
+    <div class="col col--span-2">
       {% for entity in entities %}
-      {% if entity.type != 'co2_primary' %}
-      {% if entity.i and entity.i != blank %}
-      {% assign entity_icon = entity.i | replace: ':', '-' %}
-      {% else %}
-      {% assign entity_icon = 'mdi-gauge' %}
-      {% for icon_pair in icon_map %}
-      {% assign icon_data = icon_pair | split: ':' %}
-      {% if icon_data[0] == entity.device_class %}
-      {% assign entity_icon = icon_data[1] %}
-      {% break %}
-      {% endif %}
-      {% endfor %}
-      {% endif %}
-      <div class="item pb--8">
+      {% if entity.t == 'w' %}
+      <div class="item">
         <div class="content">
-          <span class="label">
-            <span class="mdi {{ entity_icon }}"></span>
+          <span class="label label--small">
+            <span class="mdi mdi-{{ entity.dc }}"></span>
             {{ entity.n }}
           </span>
-          <span class="value value--tnums sensor-value" data-value-fit="true">
-            {%- if entity.val == "unavailable" -%}
+          <span class="value value--small sensor-value" data-value-fit="true">
+            {%- if entity.v == "unavailable" -%}
             -
             {%- else -%}
-            {{- entity.val -}}{{- entity.u -}}
+            {{- entity.v-}}
+            <span class="label">{{- entity.u -}}</span>
             {%- endif -%}
           </span>
         </div>
+        <!-- ended content -->
       </div>
+      <!-- ended item -->
       {% endif %}
       {% endfor %}
     </div>
+    <!-- ended col -->
+
+    <div class="col col--span-3">
+      <div class="item">
+        <span class="value value--large">
+          <span class="weather-icon mdi {{ weather_icon }}"></span>
+          <span class="value value--tnums">
+            {{ time_format2[0] }}
+          </span>
+        </span>
+      </div>
+      <div class="border--h-6"></div>
+      <div class="item">
+        {% for entity in entities %}
+        {% if entity.t == 'x' %}
+        {% if entity.n == 'Battery' %}
+        {% assign xsize = 'tnums' %}
+        {% elsif entity.n == 'Luft' %}
+        {% assign xsize = 'tnums' %}
+        {% else %}
+        {% assign xsize = 'xsmall' %}
+        {% endif %}
+        <div class="content">
+          <span class="label label--small">
+            <span class="mdi mdi-{{ entity.dc }}"></span>
+            {{ entity.n }}
+          </span>
+          <span class="value value--{{ xsize }} sensor-value" data-value-fit="true">
+            {%- if entity.val == "unavailable" -%}
+            - 
+            {%- else -%}
+            {{- entity.v -}}
+            <span class="label">{{- entity.u -}}</span>
+            {%- endif -%}
+          </span>
+        </div>
+        <!-- ended content -->
+        {% if entity.dc == 'weather-sunset-down' %}
+      </div>
+      <div class="border--h-6"></div>
+      <div class="item">
+        {% endif  %}
+        {% endif %}
+        {% endfor %}
+      </div>
+      <!-- ended item -->
+    </div>
+    <!-- ended col -->
+
+    <div class="col col--span-2">
+      <div class="item">
+        <div class="content">
+          <span class="value value--tnums">
+            {{ wl }} bei
+          </span>
+        </div>
+      </div>
+      <!-- ended item -->
+      <div class="item"> 
+        {% for entity in entities %}
+        {% if entity.t == 'y' %}
+        {% if entity.dc == 'tm' %}
+        {% assign entity_icon = 'thermometer' %} 
+        {% assign xsize = 'xlarge' %}
+        {% else %}
+        {% assign entity_icon = entity.dc %} 
+        {% assign xsize = 'xsmall' %}
+        {% endif %}
+        {% assign entity_unit = '°C' %}
+        {% if entity.u %}
+        {% assign entity_unit = entity.u %}
+        {% endif %}
+        <div class="content">
+          <span class="label label--small">
+            <span class="mdi mdi-{{ entity_icon }}"></span>
+            {{ entity.n }}
+          </span>
+          <span class="value value--{{ xsize }} sensor-value" data-value-fit="true">
+            {%- if entity.val == "unavailable" -%}
+            - 
+            {%- else -%}
+            {{- entity.v -}}
+            <span class="label">{{- entity_unit -}}</span>
+            {%- endif -%}
+          </span>
+        </div>
+        <!-- ended content -->
+        {% if entity.dc == 'tm' %}
+      </div>
+      <div class="item">
+
+        <div class="content">
+          <span class="label label--small">Mond</span>
+          <span class="value mdi mdi-moon-{{ ms | replace: '_','-' }}"></span>
+        </div>
+        <!--      </div>
+        <div class="border--h-6"></div>    
+        <div class="item"> -->
+        {% endif %}
+        <!-- ended item -->
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    <!-- ended col -->
+
   </div>
+  <!-- ended grid -->
+
+  <div class="border--h-6 w--full"></div>
+
+  <div class="grid grid--cols-6 gap--xsmall">
+    {% for entity in entities %}
+    {% if entity.t == 'r' %}
+    {% if entity.dc == 'tm' %}
+    {% assign entity_icon = 'mdi-thermometer' %}
+    {% else %}
+    {% assign entity_icon = 'mdi-water-percent' %}
+    {% endif %}
+    <div class="item pb--8">
+      <div class="content">
+        <span class="label">
+          <span class="mdi {{ entity_icon }}"></span>
+          {{ entity.n }}
+        </span>
+        <span class="value value--tnums sensor-value" data-value-fit="true">
+          {%- if entity.v == "unavailable" -%}
+          -
+          {%- else -%}
+          {{- entity.v -}}
+          <span class="label">{{- entity.u -}}</span>
+          {%- endif -%}
+        </span>
+      </div>
+      <!-- ended content -->
+    </div>
+    <!-- ended item -->
+    {% endif %}
+    {% endfor %}
+  </div>
+  <!-- ended rooms grid -->
+
+  <div class="border--h-6 w--full"></div> 
+
+  <div class="grid grid--cols-8">
+    {% for entity in entities %}
+    {% if entity.t == 'f' %}
+    {% assign entity_icon = 'mdi-weather-cloudy' %}
+    {% for icon_pair in weather_icon_map %}
+    {% assign icon_data = icon_pair | split: ':' %}
+    {% if icon_data[0] == entity.val %}
+    {% assign entity_icon = icon_data[1] %}
+    {% break %}
+    {% endif %}
+    {% endfor %}
+
+    <div class="col col--span-1">
+      <span class="label">
+        <span class="weather-daily-icon mdi {{ entity_icon }}"></span>
+        {{entity.n}}
+      </span>
+      <span class="value value--small" data-value-fit="true">
+        {{ entity.th }}{{ entity.u }}
+      </span>
+      ({{ entity.tl }}{{ entity.u }})
+      {{ entity.hum }}%
+    </div>
+    <!-- ended col -->
+    {% endif %}
+    {% endfor %}
+  </div>
+  <!-- ended forecast grid -->
+
+
+  <div class="title_bar" style="width: 760px">
+    <img class="image" src="https://usetrmnl.com/images/plugins/trmnl--render.svg">
+    <span class="title">{{ trmnl.plugin_settings.instance_name }}</span>
+    <span class="instance">
+      Stein {{ time_format2[0] }} {{ time_format2[1] }}
+    </span>
+  </div>
+
 </div>
+<!-- ended layout -->
 
-<script type="text/javascript">
-  function createCO2Gauge(level, maxWidth) {
-    Highcharts.chart('co2-gauge', {
-      chart: {
-        type: "gauge",
-        width: maxWidth
-      },
-      title: {
-        text: null
-      },
 
-      pane: {
-        startAngle: -150,
-        endAngle: 150,
-        background: {
-          backgroundColor: "transparent",
-          borderWidth: 0
-        }
-      },
-      plotOptions: {
-        gauge: {
-          animation: false,
-          pivot: {
-            backgroundColor: "transparent"
-          },
-          dial: {
-            backgroundColor: "transparent",
-            baseWidth: 0,
-          },
-        }
-      },
-      yAxis: {
-        min: 400,
-        max: 2000,
-        minorTickInterval: 0,
-        tickColor: "#ffffff",
-        tickLength: 40,
-        tickPixelInterval: 40,
-        tickWidth: 0,
-        tickPositions: [400, 800, 1200, 1600, 2000],
-        lineWidth: 0,
-        title: {
-          text: null
-        },
-        title: {
-          text: co2Rating(level),
-          style: {
-            color: "#000000",
-            fontSize: "22px"
-          }
-        },
-        labels: {
-          distance: 24,
-          style: {
-            fontSize: "17px"
-          }
-        },
-        plotBands: [
-          {
-            from: 400,
-            to: 2000,
-            color: {
-              pattern: {
-                image: "https://usetrmnl.com/images/grayscale/gray-5.png",
-                width: 12,
-                height: 12
-              }
-            },
-            innerRadius: '82%',
-            borderRadius: '50%'
-          },
-          {
-            from: 400,
-            to: level,
-            color: '#000000',
-            innerRadius: "82%",
-            borderRadius: "50%"
-          }
-        ]
-      },
-      series: [{
-        name: "CO₂",
-        data: [level],
-        dataLabels: {
-          format: '{point.y} ppm',
-          borderWidth: 0,
-          style: {
-            fontSize: "32px",
-          },
-          y: -20
-        }
-      }],
-      credits: {
-        enabled: false
-      }
-    });
-  }
-
-  createCO2Gauge({{ co2_value }}, 370);
-</script>
